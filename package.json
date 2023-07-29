@@ -12,6 +12,8 @@
   "activationEvents": [
     "onLanguage:javascript",
     "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
     "onCommand:extension.findType",
     "onDidOpenTextDocument",
     "onDidSaveTextDocument"
