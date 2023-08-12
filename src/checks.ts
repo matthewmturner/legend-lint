@@ -4,7 +4,7 @@ import * as ts from "typescript";
 import {
   findDeclareObsNodes,
   findUseObsNodes,
-  isReactNode,
+  isChildOfReactNode,
   printNodeName,
 } from "./utils/nodes";
 
@@ -103,30 +103,9 @@ function checkUseInReactComponent({
 }) {
   const useObsNodes = findUseObsNodes(sourceFile, checker);
   useObsNodes.forEach((node) => {
-    printNodeName(node);
-    if (isReactNode(node.parent, checker)) {
-      console.log("Parent of useObs is a react node");
-    }
-    if (!isReactNode(node.parent.parent, checker)) {
+    if (!isChildOfReactNode(node, checker)) {
       console.log("Parent of useObs is not a react node");
       const diagnostic = createVSCDiagnostic(node);
-      //   const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-      //     node.getStart()
-      //   );
-      //   console.log("line", line);
-      //   console.log("character", character);
-      //   console.log("node", node);
-      //   const variableName = (node as ts.Identifier).text;
-      //   console.log("variableName", variableName);
-      //   const diagnostic: vscode.Diagnostic = {
-      //     severity: vscode.DiagnosticSeverity.Warning,
-      //     range: new vscode.Range(
-      //       new vscode.Position(line, character),
-      //       new vscode.Position(line, character + variableName.length)
-      //     ),
-      //     message: "Obs.use() must be called in a React component",
-      //     source: "legend-lint",
-      //   };
       diagnostics.push(diagnostic);
     }
   });

@@ -1,6 +1,6 @@
 import * as ts from "typescript";
 
-export function printNodeName(node: ts.Node) {
+export function printNodeName(node: ts.Node, message?: string) {
   let name: string | undefined = undefined;
 
   if (ts.isIdentifier(node)) {
@@ -39,6 +39,8 @@ export function printNodeName(node: ts.Node) {
 
   if (name) {
     console.log(`Node type: ${ts.SyntaxKind[node.kind]}, Node name: ${name}`);
+  } else {
+    console.log("Unknown node type");
   }
 }
 
@@ -57,47 +59,37 @@ function isDeclareObsNode(node: ts.Node, checker: ts.TypeChecker) {
   }
 }
 
-export function isReactNode(node: ts.Node, typeChecker: ts.TypeChecker) {
-  // If node is a class, check if it extends React.Component or React.PureComponent
-  if (ts.isClassDeclaration(node)) {
-    console.log("isReactNode:isClassDeclaration");
-    const heritageClause = node.heritageClauses?.[0];
-    if (
-      heritageClause &&
-      heritageClause.token === ts.SyntaxKind.ExtendsKeyword
-    ) {
-      const type = typeChecker.getTypeAtLocation(
-        heritageClause.types[0].expression
-      );
-      const symbol = type.getSymbol();
-      return symbol
-        ? ["React.Component", "React.PureComponent"].includes(symbol.getName())
-        : false;
+function returnsJsx(node: ts.FunctionDeclaration | ts.ArrowFunction): boolean {
+  let hasJsxReturn = false;
+
+  function visitNode(innerNode: ts.Node) {
+    if (ts.isReturnStatement(innerNode) && innerNode.expression) {
+      if (
+        ts.isJsxElement(innerNode.expression) ||
+        ts.isJsxSelfClosingElement(innerNode.expression)
+      ) {
+        hasJsxReturn = true;
+      }
     }
+
+    ts.forEachChild(innerNode, visitNode);
   }
 
-  // If node is a function, check if it returns JSX.Element
-  const isFuncDeclation = ts.isFunctionDeclaration(node);
-  const isArrowFunction = ts.isArrowFunction(node);
-  const isFunctionExpression = ts.isFunctionExpression(node);
-  console.log("isFuncDeclation", isFuncDeclation);
-  console.log("isArrowFunction", isArrowFunction);
-  console.log("isFunctionExpression", isFunctionExpression);
+  visitNode(node);
+  return hasJsxReturn;
+}
 
-  if (
-    ts.isFunctionDeclaration(node) ||
-    ts.isArrowFunction(node) ||
-    ts.isFunctionExpression(node)
-  ) {
-    console.log("isReactNode:isFunctionDeclaration");
-    const type = typeChecker.getTypeAtLocation(node);
-    const signatures = typeChecker.getSignaturesOfType(
-      type,
-      ts.SignatureKind.Call
-    );
-    const returnType = typeChecker.getReturnTypeOfSignature(signatures[0]);
-    const symbol = returnType.getSymbol();
-    return symbol ? symbol.getName() === "JSX.Element" : false;
+export function isChildOfReactNode(node: ts.Node, typeChecker: ts.TypeChecker) {
+  while (node) {
+    console.log("Checking");
+    printNodeName(node);
+    if (ts.isFunctionDeclaration(node) || ts.isArrowFunction(node)) {
+      console.log("Is Function or Arrow declaration");
+      if (returnsJsx(node)) {
+        return true;
+      }
+    }
+    node = node.parent;
   }
 
   return false;
@@ -220,7 +212,7 @@ export function findReactNodes(
 ) {
   let nodes: ts.Node[] = [];
   function find(node: ts.Node) {
-    if (isReactNode(node, checker)) {
+    if (isChildOfReactNode(node, checker)) {
       nodes.push(node);
     }
     ts.forEachChild(node, find);

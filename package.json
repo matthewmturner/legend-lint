@@ -2,6 +2,7 @@
   "name": "legend-lint",
   "displayName": "Legend-Lint",
   "description": "Linting for idiomatic Legend State",
+  "publisher": "VERSDTechnologiesInc",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.80.0"
