@@ -1,11 +1,9 @@
 import * as vscode from "vscode";
 import * as ts from "typescript";
-
 import {
   findDeclareObsNodes,
   findUseObsNodes,
   isChildOfReactNode,
-  printNodeName,
 } from "./utils/nodes";
 
 const LINT_CHECKS = [checkCorrectObsNaming, checkUseInReactComponent];
