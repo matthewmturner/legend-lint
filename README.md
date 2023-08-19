@@ -15,3 +15,4 @@ While some concepts are well established Legend State introduces several new con
 
 - Observables end in $
 - the `use` method on observables can only be used within React components
+- Recommend replacing single `get()` method calls in `useSelector` with `.use()` on the variable.
